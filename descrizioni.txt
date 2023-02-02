@@ -1,0 +1,27 @@
+1) Kubernetes:
+Control Plane:
+API Server è l'interfaccia primaria per le comunicazioni tra Control Plane e cluster, avviene attraverso API Rest
+Etcd è un database distribuito di tipo key/value
+Lo scheduler, come suggerisce il nome schedula i vari compiti ai vari nodi, a seconda della richiesta e del carico di lavoro
+Il controller manager manda healthcheck al cluster e gestisce i rolling update
+Worker Node:
+Il kubelet è un daemon che runna su ogni nodo, è responsabile delle comunicazioni con il control plane e assicura venga manteneto lo stato desiderato
+Vi è anche un container runtime, solitamente Docker, che si occupa del pull delle immagini, della creazione e gestione dei container, ecc.
+Kube-proxy è un proxy che runna su ogni nodo e si occupa del networking, contiene un DNS e si assicura che il traffico sia distribuito in modo uniforme tra i vari pod
+
+2) Path:
+Il client invia una richiesta al server, questa passa per l'ingress-nginx controller, il quale fornisce il certificato per una connessione criptata, in questo viene aiutato da un apposito certificate manager, che si occupa di rinnovare i certificati prima della scadenza.
+Nell'ingress-nginx controller sono inclusi due firewall:
+OpenResty viene controllato dinamicamente da CrowdSec e la sue regole vengono cambiate a seconda della situazione attuale, ad esempio può bloccare un indirizzo IP.
+ModSecurity non è dinamico ed applica sempre le stesse regole, grazie ad esso è possibile bloccare con molta probabilità gli attacchi più comuni come XSS, SQLi, ecc,
+CrowdSec, Ingress-nginx Controller, il web server, e tutti gli altri pod quando producono dei log, questi vengono raggruppati da FluentD, successivamente questi vengono spediti in cloud in un database ElasticSearch, e successivamente possono essere analizzati con Kibana.
+Kube-state-metrics espone le metriche del sistema, le quali vengono raggruppate da MetricBeat e successivamente spedite in cloud nel database ElasticSearch, anche in questo caso, è poi possibile analizzarle con Kibana.
+
+3) Node Infrastructure:
+Nel namespace Kube-system (descritto nella parte 1)) sono stati inseriti dei pod aggiuntivi utili per log e metriche, quali FluentD (il quale è deployato come DaemonSet), MetricBeat e Kube-state-metrics
+Abbiamo poi un altro namespace dove abbiamo provveduto ad inserire l'ingress-nginx-controller
+C'è un altro namespace per CrowdSec, il quale ha l'agent e le API.
+Abbiamo un altro namespace con Prometheus e tutti i suoi pod, i quali scrapano Kube-state-metrics ed interagiscono con MetricBeat.
+C'è un namespace per lo stack ELK, o per meglio dire, nel nostro caso, EFK, questo è presente unicamente nei nodi in cloud.
+Abbiamo un namespace apposito per il cert-manager con i suoi pod.
+Infine, abbiamo il namespace di default dove abbiamo inserito il nostro web-server.

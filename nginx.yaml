@@ -1,0 +1,30 @@
+# Poichè è stato settato ingress-nginx come ingress controller, il quale fa anche da proxy
+# questa configurazione di nginx non è più necessaria, almeno finchè viene utilizzata solo da proxy e non da vero e proprio web server
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: nginx-deployment
+  namespace: default
+spec:
+  # quanti pod vogliamo?
+  replicas: 1
+  minReadySeconds: 10
+  selector:
+    matchLabels:
+    # necessario per il match con il service
+      app: myNginx
+  template:
+    metadata:
+      labels:
+        app: myNginx
+    spec:
+    # a causa di problemi è stato scelto di utilizzare una configMap
+      # - name: nginx-conf
+      #   configMap:
+      #     name: nginx-conf
+      containers:
+        - name: nginx
+          image: nginx
+          ports:
+            - containerPort: 80
+            

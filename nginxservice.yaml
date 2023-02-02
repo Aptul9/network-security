@@ -1,0 +1,21 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: nginxservice
+  namespace: default
+spec:
+# ip globale
+  #loadBalancerIP: 20.101.255.90
+  type: LoadBalancer
+  ports:
+  - name: "http"
+    port: 80
+    targetPort: 80
+  selector:
+  # necessario per il match con il service (o statefulset)
+    app: myNginx
+
+# nel Service va inserito UN SOLO set di deployment
+# se ne vengono inseriti di più il load balancer comincerà a girare le richieste casualmente ai vari pod
+# finendo inevitabilmente per arrivare a quelli che non hanno quella porta aperta, ottenendo un connection refused
+# alternativa (sconsigliata) si possono usare pod con più container, che quindi risponderanno su tutte le porte
